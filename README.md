@@ -1,4 +1,4 @@
-# <img alt="ulubit logo" src="https://ulubit.com/favicon.svg" width="28"> UluBit Lights Dashboard [![Static Badge](https://img.shields.io/badge/v0.1.0-2b7fff)](https://github.com/rodrigoperochena/lights-dashboard/releases)
+# <img alt="ulubit logo" src="https://ulubit.com/favicon.svg" width="28"> UluBit Lights Dashboard
 
 A local dashboard for controlling and managing the lights around my home.
 
