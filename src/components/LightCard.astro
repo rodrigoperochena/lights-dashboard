@@ -1,0 +1,498 @@
+---
+import type { LightForCard } from "@/data/lights"
+import PowerIcon from "@/assets/svg/power.svg"
+import LinkIcon from "@/assets/svg/external-link.svg"
+import { Button } from "@ulubit/ui"
+
+interface Props {
+  light: LightForCard
+}
+
+const { light } = Astro.props
+---
+<div 
+  class="card" 
+  data-light-card 
+  data-connection="checking"
+  data-host={light.host}
+>
+  <div class="card-container">
+    <header class="card-head">
+      <div class="light-info">
+        <div class="light-info-label">
+          <span class="light-power-status"></span>
+          <h3 class="heading">{light.name}</h3>
+        </div>
+        <span data-power-status>Off</span>
+      </div>
+      
+      <div class="light-info">
+        <span class="light-hostname">{light.host}</span>
+        <span
+          class="light-connection-status"
+          data-connection="checking"
+          data-status
+          >
+          Checking...
+        </span>
+      </div>
+      <!-- <div class:list={["light-room"]} data-room={light.room}>
+        <Icon class={"room-icon"} />
+        <span
+          class:list={["room-badge"]}>
+          {light.area}
+        </span>
+      </div> -->
+    </header>
+
+    <div class="input-wrap" data-brightness-control>
+      <label for="brightness">
+        Brightness <span class="percentage" data-percentage>0%</span>
+      </label>
+      <input
+        id="brightness"
+        type="range"
+        min="1"
+        max="255"
+        data-brightness
+        disabled
+      />
+    </div>
+    
+    <Button data-power-control fullWidth>
+      <PowerIcon slot={"start"} />
+      Power
+    </Button>
+
+    <div class="card-footer">
+      <div class="light-presets" data-presets hidden>
+        <span>Presets</span>
+        <div class="light-preset-list" data-preset-list></div>
+      </div>
+      <a href={light.url} target="_blank">WLED <LinkIcon /></a>
+    </div>
+  </div>
+</div>
+
+<style lang="scss">
+  .card {
+    border: 1px solid var(--color-divider);
+    padding: var(--space-2xs);
+    background-color: var(--color-bg-light);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-s);
+
+    p {
+      margin-top: var(--space-m);
+      margin-bottom: var(--space-l);
+    }
+  }
+
+  .card-container {
+    display: grid;
+    gap: var(--space-s);
+    padding: var(--space-xs) var(--space-s);
+    background-color: var(--color-bg);
+    border-radius: var(--border-radius);
+    height: 100%;
+    box-shadow: var(--inset-s);
+  }
+
+  .light-info,
+  .host-info {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+  }
+
+  .light-info-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+  }
+
+  h3 {
+    font-size: var(--step-1);
+    font-weight: var(--font-regular);
+  }
+
+  .light-hostname,
+  .light-connection-status {
+    font-size: var(--step--1);
+    font-family: var(--font-mono);
+  }
+  
+  a {
+    text-decoration: none;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: end;
+
+    a {
+      display: block;
+      width: fit-content;
+      font-size: var(--step--1);
+      font-weight: var(--font-regular);
+      margin-left: auto;
+
+      svg {
+        height: var(--step--1);
+        display: inline-block;
+        width: auto;
+        vertical-align: text-top;
+        margin-left: var(--space-3xs);
+      }
+    }
+  }
+
+  .input-wrap {
+    label {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    [data-brightness] {
+      width: 100%;
+      accent-color: var(--light-color);
+
+      &:disabled {
+        background-color: var(--light-color);
+        accent-color: var(--light-color);
+        color: var(--light-color);
+      }
+    }
+  }
+
+  .light-power-status {
+    width: .5rem;
+    height: .5rem;
+    border-radius: 50%;
+    display: inline-flex;
+  }
+
+  [data-power-status] {
+    font-family: var(--font-mono);
+    font-weight: var(--font-regular);
+  }
+
+
+  [data-light-card] {
+    &[data-power-state="on"] {
+      border-color: var(--light-color);
+      box-shadow: 0 0 .5rem oklch(from var(--light-color) l c h / 50%);
+      background-color: oklch(from var(--light-color) l c h / 11%);
+
+      .light-power-status {
+        background-color: var(--color-success);
+        box-shadow: 0 0 .5rem var(--light-color);
+      }
+
+      [data-power-status] {
+        color: var(--color-success);
+        text-shadow: 0 0 .5rem var(--light-color);
+      }
+    }
+
+    &[data-power-state="off"] {
+      .light-power-status {
+        background-color: var(--color-border);
+      }
+
+      h3 {
+        color: var(--color-text-muted);
+      }
+
+      [data-power-status] {
+        color: var(--color-text-muted);
+      }
+
+      .light-hostname {
+        color: var(--color-text-muted);
+      }
+    }
+
+    &[data-connection="online"] {
+      [data-status] {
+        display: none;
+      }
+    }
+
+    &[data-connection="checking"] {
+      .light-power-status {
+        background-color: var(--color-brand);
+      }
+    }
+
+    &[data-connection="offline"] {
+      opacity: .65;
+
+      .light-power-status {
+        background-color: var(--color-border-hover);
+      }
+    }
+
+    &[data-connection="error"] {
+      .light-power-status {
+        background-color: var(--color-error);
+      }
+    }
+  }
+
+  [data-light-card][data-power-state="off"] [data-brightness-control] {
+    opacity: .6;
+  }
+
+  [data-light-card][data-updating="true"] {
+    [data-power-control]:disabled {
+      --button-disabled-border: var(--light-color);
+      --button-disabled-bg: var(--color-bg);
+      --button-disabled-text: var(--light-color);
+    }
+
+    [data-brightness]:disabled {
+      background-color: var(--light-color);
+      accent-color: var(--light-color);
+      color: var(--light-color);
+    }
+  }
+
+  [data-power-control] {
+    --button-bg: var(--color-bg);
+    --button-bg-hover: var(--color-bg-light);
+    --button-border: var(--color-border);
+    font-weight: var(--font-regular);
+    
+    &[aria-pressed="true"] {
+      --button-text: var(--light-color);
+      --button-border: var(--light-color);
+      svg {
+        color: var(--light-color)
+      }
+    }
+
+    &[aria-pressed="false"] {
+      --button-text: var(--color-text-muted);
+    }
+
+    :global(.ui-button-content) {
+      align-items: normal;
+    }
+  }
+
+  .light-preset-list {
+    button {
+      background-color: transparent;
+    }
+  }
+
+  [data-preset-list] {
+    margin-top: var(--space-3xs);
+    display: flex;
+    gap: var(--space-2xs);
+    flex-wrap: wrap;
+
+    & :global([data-preset-id]) {
+      background-color: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: var(--space-3xs) var(--space-2xs);
+      font-size: var(--step--1);
+      letter-spacing: 1px;
+      cursor: pointer;
+
+      &[aria-pressed="true"] {
+        color: var(--light-color);
+        border-color: oklch(from var(--light-color) l c h / 50%);
+      }
+    }
+  }
+
+  [data-preset-id][aria-pressed="true"] {
+    background-color: var(--light-color);
+  }
+</style>
+
+<script>
+  import { getWledState, toggleWledPower, setWledBrightness, type WledState, getWledPresets, type WledPreset, setWledPreset } from "@/lib/wled"
+  
+  const lightCards = document.querySelectorAll<HTMLElement>("[data-light-card]")
+
+  async function initLightCard(card: HTMLElement) {
+    const host = card.dataset.host
+
+    if (!host) return
+
+    const status = card.querySelector<HTMLElement>("[data-status]");
+    const power = card.querySelector<HTMLButtonElement>("[data-power-control]");
+    const powerLabel = power?.querySelector<HTMLSpanElement>(".ui-button-label")
+    const powerStatus = card.querySelector<HTMLSpanElement>("[data-power-status]")
+    const brightness = card.querySelector<HTMLInputElement>("[data-brightness]");
+    const brightnessPercentage = card.querySelector<HTMLElement>("[data-percentage]")
+    const presetContainer = card.querySelector<HTMLElement>("[data-presets]")
+    const presetList = card.querySelector<HTMLElement>("[data-preset-list]")
+
+    if (!status || !power || !brightness || !brightnessPercentage || !powerLabel || !powerStatus || !presetContainer || !presetList) {
+      console.error(`LightCard "${host}" is missing required elements`)
+
+      return
+    }
+
+    const renderState = (state: WledState) => {
+      card.dataset.powerState = state.on ? "on" : "off"
+      powerStatus.textContent = state.on ? "on" : "off"
+
+      powerLabel.textContent = state.on ? "Turn off" : "Turn on"
+      power.setAttribute("aria-pressed", String(state.on))
+
+      brightness.value = String(state.bri)
+      brightnessPercentage.textContent = `${Math.round((state.bri / 255) * 100)}%`
+
+      const mainSegment = state.seg.find((segment, index) => (segment.id ?? index) === state.mainseg) ?? state.seg[0]
+
+      const color = mainSegment?.col[0]
+
+      if (color) {
+        const [red, green, blue] = color
+
+        card.style.setProperty("--light-color", `rgb(${red} ${green} ${blue})`)
+      }
+
+      const presetButtons = presetList.querySelectorAll<HTMLButtonElement>("[data-preset-id]")
+
+      presetButtons.forEach((button) => {
+        const presetId = Number(button.dataset.presetId)
+
+        button.setAttribute("aria-pressed", String(presetId === state.ps))
+      })
+    }
+
+    const setConnectionState = (
+      connection: "checking" | "online" | "offline" | "error"
+    ) => {
+      card.dataset.connection = connection
+
+      switch (connection) {
+        case "checking": status.textContent = "Checking"
+        break
+        
+        case "online": status.textContent = "Online"
+        break
+
+        case "offline": status.textContent = "Offline"
+        break
+
+        case "error": status.textContent = "Error"
+        break
+      }
+    }
+
+    const setControlsDisabled = (disabled: boolean) => {
+      power.disabled = disabled
+      brightness.disabled = disabled
+    }
+
+    const setUpdating = (updating: boolean) => {
+      card.dataset.updating = String(updating)
+
+      power.disabled = updating
+    }
+
+    const updateState = async(
+      request: () => Promise<WledState>
+    ) => {
+      setUpdating(true)
+  
+      try {
+        const state = await request()
+  
+        setConnectionState("online")
+        renderState(state)
+      } catch (error) {
+        setConnectionState("error")
+        console.error(`Failed to update to ${host}`, error)
+      } finally {
+        setUpdating(false)
+      }
+    }
+
+    const renderPresets = (presets: WledPreset[]) => {
+      presetList.replaceChildren()
+
+      if (presets.length === 0) {
+        return
+      }
+
+      for (const preset of presets) {
+        const button = document.createElement("button")
+
+        button.type = "button"
+        button.textContent = preset.name
+        button.dataset.presetId = String(preset.id)
+
+        presetList.append(button)
+      }
+
+      presetContainer.hidden = false
+    }
+
+    setConnectionState('checking')
+    setControlsDisabled(true)
+
+    try {
+      const state = await getWledState(host)
+      const presets = await getWledPresets(host)
+
+      renderPresets(presets)
+      
+      setConnectionState("online")
+      renderState(state)
+
+      setControlsDisabled(false)
+    } catch (error) {
+      setConnectionState("offline")
+      console.error(`Failed to connect to ${host}`, error)
+    }
+  
+    power.addEventListener("click", () => {
+      void updateState(() => toggleWledPower(host))
+    })
+
+    brightness.addEventListener("change", () => {
+      const value = Number(brightness.value)
+
+      void updateState(() => setWledBrightness(host, value))
+    })
+
+    presetList.addEventListener("click", (event) => {
+      const target = event.target
+
+      if (!(target instanceof HTMLButtonElement)) return
+
+      const presetId = Number(target.dataset.presetId)
+
+      if (!Number.isInteger(presetId)) return
+
+      void updateState(() => setWledPreset(host, presetId))
+    })
+
+    window.addEventListener("wled:state-change", (event) => {
+      const { host: updateHost, state } = (
+        event as CustomEvent<{
+          host: string
+          state: WledState
+        }>
+      ).detail
+
+      if (updateHost !== host) return
+
+      setConnectionState("online")
+      renderState(state)
+    })
+  }
+  
+  lightCards.forEach((card) => {
+    void initLightCard(card)
+  })
+</script>

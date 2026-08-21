@@ -1,0 +1,17 @@
+---
+interface Props {
+  analyticsId: string
+}
+
+const { analyticsId } = Astro.props
+const isProd = import.meta.env.PROD
+const shouldLoadAnalytics = isProd && analyticsId
+---
+{shouldLoadAnalytics && (
+  <script 
+    is:inline 
+    defer 
+    src="https://analytics.ulubit.com/app.js" 
+    data-website-id={analyticsId}
+  ></script>
+)}

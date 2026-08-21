@@ -1,0 +1,22 @@
+@use "@ulubit/foundations";
+@use "@ulubit/foundations/breakpoints" as *;
+
+@use "./base";
+@use "./colors";
+@use "./utilities";
+@use "./typography";
+@use "./layout";
+
+/* Misc global tokens */
+:root {
+  --header-height: 3rem;
+  --footer-height: 2.5rem;
+
+  --border-radius: var(--space-2xs);
+
+  --phi: 1.618;
+
+  @include at(lg) {
+    --header-height: 4rem;
+  }
+}

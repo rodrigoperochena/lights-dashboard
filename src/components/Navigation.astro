@@ -1,0 +1,76 @@
+---
+import type { NavigationLinks } from '@/types'
+
+interface Props {
+  navigationLinks: NavigationLinks
+}
+
+const { navigationLinks } = Astro.props
+
+const currentPath = Astro.url.pathname
+---
+<nav
+  class="navigation"
+  aria-label="primary"
+  data-navigation
+>
+  <ul class:list={["navigation-list", "no-bullets"]}>
+    {navigationLinks.map((link) => (
+      <li>
+        <a
+          href={link.path}
+          class="navigation-link"
+          aria-current={link.path === currentPath ? "page" : undefined}
+        >
+          {link.title}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<style lang="scss">
+  @use "@ulubit/foundations/breakpoints" as *;
+
+  .navigation {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navigation-list {
+    text-align: center;
+
+    @include at(xl) {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2xs);
+    }
+  }
+
+  .navigation-link {
+    --active: oklch(from var(--color-bg-light) l c h / 70%);
+    --active-hover: var(--color-bg-light);
+
+    font-size: var(--step-3);
+    font-weight: var(--font-regular);
+    color: var(--color-text);
+    text-decoration: none;
+    display: block;
+    padding: var(--space-2xs) var(--space-s);
+    border-radius: var(--border-radius);
+
+    &:hover,
+    &[aria-current] {
+      background-color: var(--active);
+    }
+
+    &[aria-current]:hover {
+      background-color: var(--active-hover);
+    }
+
+    @include at(xl) {
+      font-size: var(--step-0);
+    }
+  }
+</style>

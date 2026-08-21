@@ -1,0 +1,52 @@
+---
+import { siteConfig } from "@/site.config"
+
+const buildYear = new Date().getFullYear()
+---
+<footer class="site-footer">
+  <div class="container">
+    <p class="copyright">&copy; <span data-year>{buildYear}</span> | <a href="/" class="link">{ siteConfig.brand.name }</a></p>
+    <p class="dev">by <a href={siteConfig.devUrl} class="link">{ siteConfig.dev }</a></p>
+  </div>
+</footer>
+
+<style>
+  footer {
+    height: var(--footer-height);
+    display: flex;
+    align-items: center;
+    background-color: var(--color-bg);
+  }
+  
+  .container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--step--1);
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  span[data-year],
+  .dev a {
+    font-family: var(--font-mono);
+  }
+
+  .dev a {
+    color: var(--color-brand);
+  }
+</style>
+
+<script>
+  const currentYear = document.querySelector('[data-year]')
+  currentYear && (currentYear.textContent = String(new Date().getFullYear()))
+</script>

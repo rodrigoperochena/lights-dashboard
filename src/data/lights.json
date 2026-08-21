@@ -1,0 +1,50 @@
+{
+  "desk-shelf-left": {
+    "name": "Shelf Left",
+    "room": "bedroom",
+    "area": "desk",
+    "host": "desk-shelf-left.local",
+    "order": 1
+  },
+
+  "desk-shelf-right": {
+    "name": "Shelf Right",
+    "room": "bedroom",
+    "area": "desk",
+    "host": "desk-shelf-right.local",
+    "order": 2
+  },
+
+
+  "desk-monitor": {
+    "name": "Monitor",
+    "room": "bedroom",
+    "area": "desk",
+    "host": "desk-monitor.local",
+    "order": 3
+  },
+
+  "desk-back": {
+    "name": "Desk Back",
+    "room": "bedroom",
+    "area": "desk",
+    "host": "desk-back.local",
+    "order": 4
+  },
+  
+  "wardrobe-interior": {
+    "name": "Wardrobe Interior",
+    "room": "bedroom",
+    "area": "wardrobe",
+    "host": "wardrobe-interior.local",
+    "order": 5
+  },
+
+  "bathroom-shelf": {
+    "name": "Bathroom shelf",
+    "room": "bathroom",
+    "area": "shelves",
+    "host": "bathroom-shelf.local",
+    "order": 6
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "movie": {
+    "name": "Movie",
+    "lights": [
+      {
+        "light": "desk-shelf-left",
+        "on": false
+      },
+      {
+        "light": "desk-monitor",
+        "on": true,
+        "brightness": 66,
+        "preset": "Warm"
+      },
+      {
+        "light": "desk-back",
+        "on": false
+      },
+      {
+        "light": "desk-shelf-right",
+        "on": false
+      },
+      {
+        "light": "wardrobe-interior",
+        "on": true,
+        "brightness": 66,
+        "preset": "Warm"
+      }
+    ]
+  },
+  "work": {
+    "name": "Work",
+    "lights": [
+      {
+        "light": "desk-monitor",
+        "on": true,
+        "brightness": 122,
+        "preset": "Neutral"
+      },
+      {
+        "light": "desk-back",
+        "on": true,
+        "brightness": 122,
+        "preset": "Neutral"
+      },
+      {
+        "light": "desk-shelf-left",
+        "on": true,
+        "brightness": 122,
+        "preset": "Neutral"
+      },
+      {
+        "light": "desk-shelf-right",
+        "on": true,
+        "brightness": 122,
+        "preset": "Neutral"
+      },
+      {
+        "light": "wardrobe-interior",
+        "on": false
+      }
+    ]
+  },
+  "ambient": {
+    "name": "Ambient",
+    "lights": [
+      {
+        "light": "desk-monitor",
+        "on": false
+      },
+      {
+        "light": "desk-shelf-left",
+        "on": true,
+        "preset": "Warm",
+        "brightness": 66
+      },
+      {
+        "light": "desk-back",
+        "on": true,
+        "brightness": 111,
+        "preset": "Warm"
+      },
+      {
+        "light": "desk-shelf-right",
+        "on": true,
+        "brightness": 66,
+        "preset": "Warm"
+      },
+      {
+        "light": "wardrobe-interior",
+        "on": true,
+        "brightness": 66,
+        "preset": "Warm"
+      }
+    ]
+  }
+}

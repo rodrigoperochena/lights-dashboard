@@ -1,0 +1,68 @@
+---
+import { siteConfig } from "@/site.config";
+import type { SiteMeta } from "@/types";
+import Analytics from "./Analytics.astro";
+import { Font } from "astro:assets";
+
+type Props = SiteMeta
+
+const { title, description, ogImage, articleDate } = Astro.props
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+const ogImageUrl = new URL(ogImage ? ogImage : "/og-image.jpg", Astro.url).href
+const analyticsId = siteConfig.analyticsId
+---
+
+<!-- Charset & Viewport -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- Theme Color -->
+
+<!-- Analytics -->
+<Analytics {analyticsId} />
+
+<!-- Essential Metadata -->
+<title>{title} | { siteConfig.brand.name }</title>
+<meta name="description" content={description} />
+<meta name="author" content={siteConfig.author} />
+
+<!-- Canonical -->
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- Sitemap link -->
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<!-- OpenGraph / Facebook / Linkedin -->
+<meta property="og:type" content={articleDate ? "article" : "website"}>
+<meta property="og:url" content={canonicalUrl}>
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:image" content={ogImageUrl}>
+<meta property="og:site_name" content={siteConfig.brand.name} />
+<meta property="og:locale" content={siteConfig.ogLocale} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+{articleDate && (
+	<meta content={siteConfig.author} property="article:author" />
+	<meta content={articleDate} property="article:published_time" />
+)}
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content={title}>
+<meta name="twitter:description" content={description}>
+<meta name="twitter:image" content={ogImageUrl}>
+<meta name="twitter:url" content={canonicalUrl}>
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content={siteConfig.brand.shortName} />
+<link rel="manifest" href="/site.webmanifest" />
+
+<!-- Fonts -->
+<Font cssVariable="--font-fira-sans" preload />
+<Font cssVariable="--font-jetbrains-mono" />

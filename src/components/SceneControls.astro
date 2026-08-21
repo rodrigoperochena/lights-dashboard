@@ -1,0 +1,182 @@
+---
+import { getEntry } from "astro:content"
+import { getCollection } from "astro:content"
+
+
+const scenes = await getCollection("scenes")
+
+const resolvedScenes = await Promise.all(scenes.map(async (scene) => {
+  const actions = await Promise.all(scene.data.lights.map(async ({ light, ...action }) => {
+    const lightEntry = await getEntry(light)
+
+    if (!lightEntry) {
+      throw new Error(`Light "${light.id}" referenced by scene "${scene.id}" was not found`)
+    }
+
+    return {
+      id: lightEntry.id,
+      name: lightEntry.data.name,
+      host: lightEntry.data.host,
+      ...action
+    }
+  }))
+
+  return {
+    id: scene.id,
+    name: scene.data.name,
+    actions,
+  }
+}))
+---
+
+<div class="scene-controls" data-scene-controls>
+  {resolvedScenes.map((scene) => (
+    <button 
+      type="button"
+      data-scene-control
+      data-actions={JSON.stringify(scene.actions)}
+    >
+      {scene.name}
+    </button>
+  ))}
+
+  <span class="scene-status" data-scene-status aria-live="polite" hidden></span>
+</div>
+
+<style lang="scss">
+  .scene-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3xs);
+  }
+
+  button {
+    background-color: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--space-3xs) var(--space-2xs);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--color-bg-light);
+    }
+  }
+</style>
+
+<script>
+  import {
+  getWledPresets,
+  setWledBrightness,
+  setWledPower,
+  setWledPreset,
+  type WledState,
+} from "@/lib/wled"
+
+interface SceneAction {
+  id: string
+  name: string
+  host: string
+  on?: boolean
+  brightness?: number
+  preset?: string
+}
+
+async function applySceneAction(
+  action: SceneAction,
+): Promise<WledState> {
+  let state: WledState | undefined
+
+  if (action.preset) {
+    const presets = await getWledPresets(action.host)
+
+    const preset = presets.find(
+      ({ name }) => name === action.preset,
+    )
+
+    if (!preset) {
+      throw new Error(
+        `Preset "${action.preset}" not found on ${action.host}`,
+      )
+    }
+
+    state = await setWledPreset(
+      action.host,
+      preset.id,
+    )
+  }
+
+  if (action.brightness !== undefined) {
+    state = await setWledBrightness(
+      action.host,
+      action.brightness,
+    )
+  }
+
+  if (action.on !== undefined) {
+    state = await setWledPower(
+      action.host,
+      action.on,
+    )
+  }
+
+  if (!state) {
+    throw new Error(`Scene action for ${action.host} did not perform any operation`)
+  }
+
+  return state
+}
+
+// executing the scene
+const sceneControls = document.querySelector<HTMLElement>("[data-scene-controls]")
+
+if (sceneControls) {
+  const sceneStatus = sceneControls.querySelector<HTMLElement>("[data-scene-status]")
+
+  const sceneButtons = sceneControls.querySelectorAll<HTMLButtonElement>("[data-scene-control]")
+
+  sceneButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const actionsJson = button.dataset.actions
+
+      if (!actionsJson) return
+
+      const actions = JSON.parse(actionsJson) as SceneAction[]
+
+      sceneButtons.forEach((button) => {
+        button.disabled = true
+      })
+
+      if (sceneStatus) {
+        sceneStatus.textContent = "Applying…"
+      }
+
+      let successful = 0
+
+      for (const action of actions) {
+        try {
+          const state = await applySceneAction(action)
+          
+          window.dispatchEvent(new CustomEvent("wled:state-change", {
+            detail: {
+              host: action.host,
+              state
+            }
+          }))
+
+          successful++
+        } catch (error) {
+          console.error(`Failed to update ${action.host}`, error)
+        }
+      }
+
+      sceneButtons.forEach((button) => {
+        button.disabled = false
+      })
+
+      if (sceneStatus) {
+        sceneStatus.textContent = successful === actions.length ? "Applied" : `${successful} of ${actions.length} lights updated`
+      }
+    })
+  })
+}
+</script>

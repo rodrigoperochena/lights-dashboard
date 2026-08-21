@@ -1,0 +1,134 @@
+---
+import { navigationLinks } from "@/site.config";
+import NavToggle from "./NavToggle.astro";
+import Navigation from "./Navigation.astro";
+---
+<div class="navigation-wrapper" data-navigation-wrapper>
+  <NavToggle />
+  <Navigation {navigationLinks} />
+</div>
+
+<style lang="scss">
+  @use "@ulubit/foundations/breakpoints" as *;
+
+  .navigation-wrapper {
+    :global(.navigation) {
+      position: fixed;
+      inset: 0;
+      background-color: var(--color-bg);
+
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateX(100%);
+
+      transition: transform var(--transition-duration-fast) cubic-bezier(.6,0,.4,1), visibility var(--transition-duration-fast);
+
+      @include at(xl) {
+        position: static;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateX(0);
+      }
+    }
+
+    :global(.navigation-toggle) {
+      position: relative;
+      z-index: 1;
+
+      @include at(xl) {
+        display: none;
+      }
+    }
+
+    :global(.navigation-toggle[aria-expanded="true"]) + 
+    :global(.navigation) {
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    :global(body.menu-open) {
+      overflow-y: hidden;
+
+      @include at(xl) {
+        overflow-y: auto;
+      }
+    }
+  }
+</style>
+
+<script>
+  const navigationWrapper = document.querySelector('[data-navigation-wrapper]')
+  if (!(navigationWrapper instanceof HTMLElement)) {
+    throw new Error("navigation wrapper not found")
+  }
+
+  const navigationToggle = navigationWrapper.querySelector('[data-navigation-toggle]')
+  const navigation = navigationWrapper.querySelector('[data-navigation]')
+
+  if (!(navigationToggle instanceof HTMLButtonElement)) {
+    throw new Error("navigation toggle not found")
+  }
+
+  if (!(navigation instanceof HTMLElement)) {
+    throw new Error("navigation not found")
+  }
+
+  const isNavigationOpen = () => {
+    return navigationToggle.getAttribute("aria-expanded") === "true"
+  }
+
+  // Opens mobile navigation
+  const openNavigation = () => {
+    // Tell assistive tech that the controlled nav is open.
+    navigationToggle.setAttribute("aria-expanded", "true")
+
+    // Locks page scrolling while the menu is open
+    document.body.classList.add("menu-open")
+  }
+
+  // Close the full mobile navigation panel
+  const closeNavigation = () => {
+    // Tells assitive tech that the controlled nav is closed
+    navigationToggle.setAttribute("aria-expanded", "false")
+
+    // Restores page scrolling
+    document.body.classList.remove("menu-open")
+  }
+
+  // Switches between open and closed state
+  const toggleNavigation = () => {
+
+    // Closes if open, opens if closed
+    isNavigationOpen() ? closeNavigation() : openNavigation()
+  }
+
+  // Let mouse, touch, keyboard activation, and assistive tech activation trigger the button.
+  navigationToggle.addEventListener("click", toggleNavigation)
+
+  // Closes the navigation when Escape is pressed
+  document.addEventListener("keydown", (event) => {
+    // Ignores every key except Escape
+    if (event.key !== "Escape") return
+
+    if (!isNavigationOpen()) return
+
+    // Closes the navigation.
+    closeNavigation()
+
+    // Returns focus to the toggle button.
+    navigationToggle.focus()
+  })
+
+  // Closes the navigation after a nav link is clicked
+  navigation.addEventListener("click", (event) => {
+    // Finds the closest clicked link, if any
+    const link = event.target instanceof Element ? event.target.closest("a") : null
+
+    // Ignores clicks that were not on links
+    if (!link) return
+
+    // Closes the mobile panel after link selection
+    closeNavigation()
+  })
+</script>

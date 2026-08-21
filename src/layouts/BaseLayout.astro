@@ -1,0 +1,92 @@
+---
+import BaseHead from '@/components/BaseHead.astro'
+import Header from '@/components/Header.astro'
+import Footer from '@/components/Footer.astro'
+import type { SiteMeta } from '@/types'
+import { siteConfig } from '@/site.config'
+import '@/styles/global.scss'
+
+interface Props extends SiteMeta {
+	pageLayout?: string
+  bodyClass?: string
+}
+
+const { 
+	title, 
+	description = siteConfig.description, 
+	pageLayout,
+	bodyClass, 
+	ogImage, 
+	articleDate,
+} = Astro.props
+---
+<!doctype html>
+<html lang={siteConfig.lang}>
+	<head>
+		<BaseHead {title} {description} {ogImage} {articleDate}/>
+		<slot name="head" />
+	</head>
+
+	<body class:list={[bodyClass]}>
+		<a href="#main-content" class="skip-link">Skip to main content</a>
+
+		<Header />
+		<div class:list={["page-layout", pageLayout ? `page-layout--${pageLayout}` : undefined]}>
+			<slot />
+		</div>
+		<Footer />
+	</body>
+</html>
+
+<script>
+	// SHOWING ELEMENTS ON SCROLL with IntersectionObserver
+	// Grabbing all hidden elements through their data attribute; '[data-hidden-element]'
+	const hiddenElements = document.querySelectorAll("[data-hidden-element]");
+	// Creating the observer; IntersectionObserver
+	const observer = new IntersectionObserver((entries) => {
+		// looping through each 'entry'; what the observer 'observes'
+		entries.forEach((entry) => {
+			// checking if it's intersection and adding the class 'show' if it's
+			if (entry.isIntersecting) {
+				entry.target.classList.add("show");
+				// if not then remove the class 'show'
+				observer.unobserve(entry.target)
+			}
+		});
+	});
+
+	// Observing each hidden element
+	hiddenElements.forEach(element => observer.observe(element))
+
+	// headerScroll function to check for scrolling rules
+	const headerScroll = () => {
+    let lastScroll = 0
+		const scrollOffset = 122
+  
+    //listening on scroll event
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.scrollY
+      const body = document.body
+  
+      //checking if is scrolling down
+      if (currentScroll > scrollOffset) {
+        body.classList.add('scroll-down')
+        body.classList.remove('scroll-up')
+      }
+  
+      //checking if is scrolling up
+      if (currentScroll < lastScroll) {
+        body.classList.add('scroll-up')
+        body.classList.remove('scroll-down')
+      }
+  
+      //checking if is at top of screen; 0 on the Y-axis
+      if (currentScroll <= 0) {
+        body.classList.remove('scroll-up')
+      }
+  
+      lastScroll = currentScroll
+    })
+  }
+  headerScroll()
+</script>
