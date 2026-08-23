@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {
     "@ulubit/foundations": "^0.1.3",
