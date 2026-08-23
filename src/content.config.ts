@@ -6,19 +6,19 @@ const lights = defineCollection({
   loader: file("src/data/lights.json"),
 
   schema: z.object({
-    name: z.string(),
+    name: z.string().trim().min(1), //no empty strings
     room: z.enum(["bedroom", "bathroom", "kitchen"]),
-    host: z.string(),
-    area: z.string(),
-    order: z.number(),
+    host: z.string().trim().min(1),
+    area: z.string().trim().min(1),
+    order: z.number().int(),
   })
 })
 
 const sceneLight = z.object({
   light: reference("lights"),
   on: z.boolean().optional(),
-  brightness: z.number().min(1).max(255).optional(),
-  preset: z.string().optional()
+  brightness: z.number().int().min(1).max(255).optional(),
+  preset: z.string().trim().min(1).optional()
 }).refine(
   ({ on, brightness, preset }) => 
     on !== undefined || 

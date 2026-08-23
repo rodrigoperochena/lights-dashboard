@@ -29,42 +29,100 @@ type WledPresetData = {
   n?: string
 }
 
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+async function waitForWledPreset(
+  host: string,
+  presetId: number,
+): Promise<WledState> {
+  const attempts = 10
+  const interval = 50
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const state = await getWledState(host)
+
+    if (state.ps === presetId) {
+      return state
+    }
+    
+    if (attempt < attempts - 1) {
+      await delay(interval)
+    }
+  }
+
+  throw new Error(
+    `Preset ${presetId} did not apply on ${host}`,
+  )
+}
+
+export async function setWledPreset(
+  host: string,
+  presetId: number
+): Promise<WledState> {
+  await updateWledState(host, {
+    ps: presetId
+  })
+
+  return waitForWledPreset(host, presetId)
+}
+
+const WLED_REQUEST_TIMEOUT = 2_000
+
+async function requestWledJson<T>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    signal: AbortSignal.timeout(WLED_REQUEST_TIMEOUT)
+  })
+
+  if (!response.ok) {
+    throw new Error(`WLED request to ${url} failed with ${response.status}`)
+  }
+
+  return response.json() as Promise<T>
+}
+
 function getStateUrl(host: string) {
   return `http://${host}/json/state`;
+}
+
+function getPresetsUrl(host: string) {
+  return `http://${host}/presets.json`
 }
 
 async function requestState(
   host: string,
   options?: RequestInit,
 ): Promise<WledState> {
-  const response = await fetch(getStateUrl(host), options);
-
-  if (!response.ok) {
-    throw new Error(
-      `WLED request to ${host} failed with ${response.status}`,
-    );
-  }
-
-  return response.json();
+  return requestWledJson<WledState>(
+    getStateUrl(host),
+    options
+  )
 }
 
 export function getWledState(host: string) {
   return requestState(host);
 }
 
-export async function getWledPresets(host: string): Promise<WledPreset[]> {
-  const response = await fetch(`http://${host}/presets.json`)
+export async function getWledPresets(
+  host: string,
+): Promise<WledPreset[]> {
+  const data = await requestWledJson<Record<string, WledPresetData>>(getPresetsUrl(host))
 
-  if (!response.ok) {
-    throw new Error(`Failed to get presets from ${host}: ${response.status}`)
-  }
+  return Object.entries(data).flatMap(([id, preset]) => {
+    if (!preset.n) return []
 
-  const data: Record<string, WledPresetData> = await response.json()
-
-  return Object.entries(data).filter(([, preset]) => preset.n).map(([id, preset]) => ({
-    id: Number(id),
-    name: preset.n!
-  })).sort((a, b) => a.id - b.id)
+    return [{
+      id: Number(id),
+      name: preset.n
+    }]
+  }).sort((a, b) => a.id - b.id)
 }
 
 async function updateWledState(
@@ -103,15 +161,4 @@ export function setWledBrightness(
   return updateWledState(host, {
     bri: brightness,
   });
-}
-
-export async function setWledPreset(
-  host: string,
-  presetId: number
-) {
-  await updateWledState(host, {
-    ps: presetId
-  })
-
-  return getWledState(host)
 }

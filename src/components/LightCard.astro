@@ -9,6 +9,8 @@ interface Props {
 }
 
 const { light } = Astro.props
+
+const brigthnessId = `brightness-${light.id}`
 ---
 <div 
   class="card" 
@@ -23,14 +25,13 @@ const { light } = Astro.props
           <span class="light-power-status"></span>
           <h3 class="heading">{light.name}</h3>
         </div>
-        <span data-power-status>Off</span>
+        <span data-power-status>&mdash;</span>
       </div>
       
       <div class="light-info">
         <span class="light-hostname">{light.host}</span>
         <span
           class="light-connection-status"
-          data-connection="checking"
           data-status
           >
           Checking...
@@ -46,11 +47,11 @@ const { light } = Astro.props
     </header>
 
     <div class="input-wrap" data-brightness-control>
-      <label for="brightness">
+      <label for={brigthnessId}>
         Brightness <span class="percentage" data-percentage>0%</span>
       </label>
       <input
-        id="brightness"
+        id={brigthnessId}
         type="range"
         min="1"
         max="255"
@@ -69,7 +70,7 @@ const { light } = Astro.props
         <span>Presets</span>
         <div class="light-preset-list" data-preset-list></div>
       </div>
-      <a href={light.url} target="_blank">WLED <LinkIcon /></a>
+      <a href={light.url} target="_blank" rel="noopener">WLED <LinkIcon /></a>
     </div>
   </div>
 </div>
@@ -265,8 +266,7 @@ const { light } = Astro.props
     font-weight: var(--font-regular);
     
     &[aria-pressed="true"] {
-      --button-text: var(--light-color);
-      --button-border: var(--light-color);
+      --button-text: var(--color-text);
       svg {
         color: var(--light-color)
       }
@@ -316,6 +316,7 @@ const { light } = Astro.props
 
 <script>
   import { getWledState, toggleWledPower, setWledBrightness, type WledState, getWledPresets, type WledPreset, setWledPreset } from "@/lib/wled"
+  import { clearKnownWledState, getKnownWledState, subscribeToWledState, updateKnownWledState } from "@/lib/wled-state";
   
   const lightCards = document.querySelectorAll<HTMLElement>("[data-light-card]")
 
@@ -388,16 +389,41 @@ const { light } = Astro.props
       }
     }
 
+    const setPresetControlsDisabled = (disabled: boolean) => {
+      const buttons = presetList.querySelectorAll<HTMLButtonElement>("[data-preset-id]")
+
+      buttons.forEach((button) => {
+        button.disabled = disabled
+      })
+    }
+
     const setControlsDisabled = (disabled: boolean) => {
       power.disabled = disabled
       brightness.disabled = disabled
+      setPresetControlsDisabled(disabled)
     }
 
     const setUpdating = (updating: boolean) => {
       card.dataset.updating = String(updating)
 
-      power.disabled = updating
+      setControlsDisabled(updating || !getKnownWledState(host))
     }
+
+    subscribeToWledState((updateHost, state) => {
+      if (updateHost !== host) return
+
+      if (!state) {
+        setConnectionState("offline")
+        setControlsDisabled(true)
+
+        return
+      }
+
+      setConnectionState("online")
+      renderState(state)
+
+      setControlsDisabled(card.dataset.updating === "true")
+    })
 
     const updateState = async(
       request: () => Promise<WledState>
@@ -407,10 +433,11 @@ const { light } = Astro.props
       try {
         const state = await request()
   
-        setConnectionState("online")
-        renderState(state)
+        updateKnownWledState(host, state)
       } catch (error) {
+        clearKnownWledState(host)
         setConnectionState("error")
+
         console.error(`Failed to update to ${host}`, error)
       } finally {
         setUpdating(false)
@@ -442,16 +469,26 @@ const { light } = Astro.props
 
     try {
       const state = await getWledState(host)
-      const presets = await getWledPresets(host)
 
-      renderPresets(presets)
-      
-      setConnectionState("online")
-      renderState(state)
-
+      updateKnownWledState(host, state)
       setControlsDisabled(false)
+
+      try {
+        const presets = await getWledPresets(host)
+
+        renderPresets(presets)
+
+        const currentState = getKnownWledState(host)
+
+        if(currentState) {
+          renderState(currentState)
+        }
+      } catch (error) {
+        console.error(`Failed to load presets from ${host}`, error)
+      }
     } catch (error) {
-      setConnectionState("offline")
+      clearKnownWledState(host)
+
       console.error(`Failed to connect to ${host}`, error)
     }
   
@@ -475,20 +512,6 @@ const { light } = Astro.props
       if (!Number.isInteger(presetId)) return
 
       void updateState(() => setWledPreset(host, presetId))
-    })
-
-    window.addEventListener("wled:state-change", (event) => {
-      const { host: updateHost, state } = (
-        event as CustomEvent<{
-          host: string
-          state: WledState
-        }>
-      ).detail
-
-      if (updateHost !== host) return
-
-      setConnectionState("online")
-      renderState(state)
     })
   }
   

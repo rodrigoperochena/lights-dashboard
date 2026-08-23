@@ -1,7 +1,9 @@
 ---
 import { getEntry } from "astro:content"
 import { getCollection } from "astro:content"
-
+import LoadingIcon from "@/assets/svg/loader-circle.svg"
+import AlertIcon from "@/assets/svg/triangle-alert.svg"
+import ActiveIcon from "@/assets/svg/check.svg"
 
 const scenes = await getCollection("scenes")
 
@@ -34,13 +36,17 @@ const resolvedScenes = await Promise.all(scenes.map(async (scene) => {
     <button 
       type="button"
       data-scene-control
+      data-scene-id={scene.id}
       data-actions={JSON.stringify(scene.actions)}
+      aria-pressed="false"
+      aria-busy="false"
     >
-      {scene.name}
+      <LoadingIcon data-loading-icon aria-hidden="true" />
+      <AlertIcon data-alert-icon aria-hidden="true" />
+      <ActiveIcon data-active-icon aria-hidden="true" />
+      <span class="button-label">{scene.name}</span>
     </button>
   ))}
-
-  <span class="scene-status" data-scene-status aria-live="polite" hidden></span>
 </div>
 
 <style lang="scss">
@@ -61,122 +67,318 @@ const resolvedScenes = await Promise.all(scenes.map(async (scene) => {
       background-color: var(--color-bg-light);
     }
   }
+
+  [data-loading-icon],
+  [data-alert-icon],
+  [data-active-icon] {
+    display: none;
+    vertical-align: text-top;
+    margin-right: var(--space-3xs);
+    height: var(--step-0);
+    width: auto;
+  }
+
+  [data-scene-control][aria-pressed="true"] {
+    background-color: oklch(from var(--color-brand) l c h / 11%);
+  }
+
+  [data-scene-control][aria-busy="true"] {
+    [data-loading-icon] {
+      display: inline-block;
+      animation: scene-spinner var(--transition-duration-slow) linear  infinite;
+
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
+    }
+  }
+
+  [data-scene-match="active"] {
+    background-color: oklch(from var(--color-brand) l c h / 11%);
+    [data-active-icon] {
+      display: inline-block;
+    }
+  }
+
+  [data-scene-match="partial"] {
+    background-color: oklch(from var(--color-brand) l c h / 11%);
+
+    [data-alert-icon] {
+      display: inline-block;
+      color: oklch(from var(--color-brand) l c h / 75%);
+    }
+  }
+
+  @keyframes scene-spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 </style>
 
 <script>
   import {
-  getWledPresets,
-  setWledBrightness,
-  setWledPower,
-  setWledPreset,
-  type WledState,
-} from "@/lib/wled"
+    getWledPresets,
+    setWledBrightness,
+    setWledPower,
+    setWledPreset,
+    type WledPreset,
+    type WledState,
+  } from "@/lib/wled"
+  import { getKnownWledState, subscribeToWledState, updateKnownWledState } from "@/lib/wled-state"
 
-interface SceneAction {
-  id: string
-  name: string
-  host: string
-  on?: boolean
-  brightness?: number
-  preset?: string
-}
+  type ActionMatch = "match" | "unknown" | "mismatch"
 
-async function applySceneAction(
-  action: SceneAction,
-): Promise<WledState> {
-  let state: WledState | undefined
+  type SceneMatch = "active" | "partial" | "inactive"
 
-  if (action.preset) {
-    const presets = await getWledPresets(action.host)
+  interface SceneAction {
+    id: string
+    name: string
+    host: string
+    on?: boolean
+    brightness?: number
+    preset?: string
+  }
 
-    const preset = presets.find(
-      ({ name }) => name === action.preset,
-    )
+  async function applySceneAction(
+    action: SceneAction,
+  ): Promise<WledState> {
+    let state: WledState | undefined
 
-    if (!preset) {
-      throw new Error(
-        `Preset "${action.preset}" not found on ${action.host}`,
+    if (action.brightness !== undefined) {
+      state = await setWledBrightness(
+        action.host,
+        action.brightness,
       )
     }
 
-    state = await setWledPreset(
-      action.host,
-      preset.id,
-    )
+    if (action.on !== undefined) {
+      state = await setWledPower(
+        action.host,
+        action.on,
+      )
+    }
+
+    if (action.preset) {
+      const presets = await getPresetsForHost(action.host)
+
+      const preset = presets.find(
+        ({ name }) => name === action.preset,
+      )
+
+      if (!preset) {
+        throw new Error(`Preset "${action.preset}" not found on ${action.host}`)
+      }
+
+      state = await setWledPreset(
+        action.host,
+        preset.id,
+      )
+    }
+
+    if (!state) {
+      throw new Error(`Scene action for ${action.host} did not perform any operation`)
+    }
+
+    return state
   }
 
-  if (action.brightness !== undefined) {
-    state = await setWledBrightness(
-      action.host,
-      action.brightness,
-    )
+  async function getActionMatch(
+    action: SceneAction
+  ): Promise<ActionMatch> {
+    const state = getKnownWledState(action.host)
+
+    if( !state) {
+      return "unknown"
+    }
+
+    if (action.on !== undefined && state.on !== action.on) {
+      return "mismatch"
+    }
+
+    if (action.brightness !== undefined && state.bri !== action.brightness) {
+      return "mismatch"
+    }
+
+    if (action.preset) {
+      let presets: WledPreset[]
+
+      try {
+        presets = await getPresetsForHost(action.host)
+      } catch {
+        return "unknown"
+      }
+
+      const preset = presets.find(({ name }) => name === action.preset)
+
+      if (!preset) {
+        return "mismatch"
+      }
+
+      if (state.ps !== preset.id) {
+        return "mismatch"
+      }
+    }
+
+    return "match"
   }
 
-  if (action.on !== undefined) {
-    state = await setWledPower(
-      action.host,
-      action.on,
-    )
+  async function getSceneMatch(
+    actions: SceneAction[]
+  ): Promise<SceneMatch> {
+    let matches = 0
+    let unknowns = 0
+
+    for (const action of actions) {
+      const result = await getActionMatch(action)
+
+      if (result === "mismatch") {
+        return "inactive"
+      }
+
+      if (result === "unknown") {
+        unknowns++
+        continue
+      }
+
+      matches++
+    }
+
+    if (matches === actions.length) {
+      return "active"
+    }
+
+    if (matches > 0 && unknowns > 0) {
+      return "partial"
+    }
+
+    return "inactive"
   }
 
-  if (!state) {
-    throw new Error(`Scene action for ${action.host} did not perform any operation`)
+  const presetRequests = new Map<string, Promise<WledPreset[]>>()
+
+  function getPresetsForHost(host: string) {
+    const existing = presetRequests.get(host)
+
+    if (existing) {
+      return existing
+    }
+
+    const request = getWledPresets(host).catch((error) => {
+      presetRequests.delete(host)
+      throw error
+    })
+
+    presetRequests.set(host, request)
+
+    return request
   }
 
-  return state
-}
+  // executing the scene
+  const sceneControls = document.querySelector<HTMLElement>("[data-scene-controls]")
 
-// executing the scene
-const sceneControls = document.querySelector<HTMLElement>("[data-scene-controls]")
+  if (sceneControls) {
+    const sceneButtons = sceneControls.querySelectorAll<HTMLButtonElement>("[data-scene-control]")
 
-if (sceneControls) {
-  const sceneStatus = sceneControls.querySelector<HTMLElement>("[data-scene-status]")
+    const actionsByButton = new Map<HTMLButtonElement, SceneAction[]>()
 
-  const sceneButtons = sceneControls.querySelectorAll<HTMLButtonElement>("[data-scene-control]")
-
-  sceneButtons.forEach((button) => {
-    button.addEventListener("click", async () => {
+    sceneButtons.forEach((button) => {
       const actionsJson = button.dataset.actions
 
       if (!actionsJson) return
 
       const actions = JSON.parse(actionsJson) as SceneAction[]
 
-      sceneButtons.forEach((button) => {
-        button.disabled = true
-      })
-
-      if (sceneStatus) {
-        sceneStatus.textContent = "Applying…"
-      }
-
-      let successful = 0
-
-      for (const action of actions) {
-        try {
-          const state = await applySceneAction(action)
-          
-          window.dispatchEvent(new CustomEvent("wled:state-change", {
-            detail: {
-              host: action.host,
-              state
-            }
-          }))
-
-          successful++
-        } catch (error) {
-          console.error(`Failed to update ${action.host}`, error)
-        }
-      }
-
-      sceneButtons.forEach((button) => {
-        button.disabled = false
-      })
-
-      if (sceneStatus) {
-        sceneStatus.textContent = successful === actions.length ? "Applied" : `${successful} of ${actions.length} lights updated`
-      }
+      actionsByButton.set(button, actions)
     })
-  })
-}
+
+    let applyingButton: HTMLButtonElement | null = null
+
+    const setApplyingScene = (activeButton: HTMLButtonElement | null) => {
+      applyingButton = activeButton
+
+      sceneButtons.forEach((button) => {
+        const isApplying = button === activeButton
+
+        button.disabled = activeButton !== null
+        button.setAttribute("aria-busy", String(isApplying))
+      })
+    }
+
+    function renderSceneMatch(
+      button: HTMLButtonElement,
+      match: SceneMatch
+    ) {
+      button.dataset.sceneMatch = match
+
+      button.setAttribute("aria-pressed", String(match === "active"))
+    }
+
+    let sceneMatchRevision = 0
+
+    async function updateSceneMatches() {
+      const revision = ++sceneMatchRevision
+
+      const results: Array<[HTMLButtonElement, SceneMatch]> = []
+
+      for (const [button, actions] of actionsByButton) {
+        const match = await getSceneMatch(actions)
+
+        if (revision !== sceneMatchRevision) {
+          return
+        }
+
+        results.push([button, match])
+      }
+
+      for (const [button, match] of results) {
+        renderSceneMatch(button, match)
+      }
+    }
+
+    for (const [button, actions] of actionsByButton) {
+      button.addEventListener("click", async () => {
+        setApplyingScene(button)
+
+        let successful = 0
+
+        for (const action of actions) {
+          if (!getKnownWledState(action.host)) {
+            console.warn(`Skipping ${action.host}: device is unavailable`)
+            continue
+          }
+
+          try {
+            const state = await applySceneAction(action)
+
+            updateKnownWledState(
+              action.host,
+              state,
+            )
+
+            successful++
+          } catch (error) {
+            console.error(`Failed to update ${action.host}`, error)
+          }
+        }
+
+        setApplyingScene(null)
+
+        await updateSceneMatches()
+
+        if (successful !== actions.length) {
+          console.error(`Scene "${button.dataset.sceneId}" only updated ${successful} of ${actions.length} lights`)
+        }
+      })
+    }
+
+    subscribeToWledState(() => {
+      if (applyingButton) return
+
+      void updateSceneMatches()
+    })
+
+    void updateSceneMatches()
+  }
 </script>

@@ -3,6 +3,7 @@ import { getCollection, type CollectionEntry } from "astro:content";
 export type Room = CollectionEntry<"lights">["data"]["room"]
 
 export interface LightForCard {
+  id: string
   host: string
   name: string
   room: Room
@@ -15,6 +16,7 @@ export async function getLightsForCard(): Promise<LightForCard[]> {
   const lights = await getCollection("lights")
 
   return lights.map((light) => ({
+    id: light.id,
     host: light.data.host,
     name: light.data.name,
     room: light.data.room,
