@@ -52,7 +52,7 @@ const bodyClass = "page-home"
         </div>
 
         <div class="lights-room">
-          <h2 class="heading"><BathroomIcon />Bathroom</h2>
+          <h2 class="heading"><BathroomIcon />Bathroom lights</h2>
           <div class="cards">
             {bathroomLights.map((light) => (
               <LightCard {light} />
@@ -90,8 +90,7 @@ const bodyClass = "page-home"
   }
 
   h2 {
-    text-align: center;
-
+    font-size: var(--step-2);
     svg {
       vertical-align: middle;
       margin-right: var(--space-2xs);
@@ -107,7 +106,7 @@ const bodyClass = "page-home"
   .cards {
     display: grid;
     gap: var(--space-s);
-    margin-top: var(--space-2xs);
+    margin-top: var(--space-xs);
 
     @include at(md) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
