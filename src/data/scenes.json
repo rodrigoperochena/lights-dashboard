@@ -61,8 +61,8 @@
       }
     ]
   },
-  "ambient": {
-    "name": "Ambient",
+  "cozy": {
+    "name": "Cozy",
     "lights": [
       {
         "light": "desk-monitor",
