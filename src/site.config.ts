@@ -13,9 +13,9 @@ export const siteConfig = {
   },
 
   // Used to construct the meta title property found in src/components/BaseHead.astro
-  title: "A small base Astro starter for building maintainable sites",
+  title: "Home lighting dashboard",
   // Used as the default description meta property
-  description: "A practical Astro starter for building consistent, maintainable websites with UluBit foundations, UI components, and shared project conventions.",
+  description: "A local dashboard for controlling and managing the lights around my home, designed to communicate directly with WLED devices over the local network",
 
   // HTML lang property, found in src/layouts/BaseLayout.astro
   lang: "en-US",
