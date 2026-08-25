@@ -4,6 +4,8 @@ A local dashboard for controlling and managing the lights around my home.
 
 Built with [Astro](https://astro.build/) and designed to communicate directly with WLED devices over the local network.
 
+![browser-screenshot](screenshots/dashboard-screenshot.png)
+
 ## Features
 
 * View WLED devices by room and area
