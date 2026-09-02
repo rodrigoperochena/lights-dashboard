@@ -10,6 +10,7 @@ export interface LightForCard {
   area: string
   url: string
   order: number
+  mdns: string
 }
 
 export async function getLightsForCard(): Promise<LightForCard[]> {
@@ -22,6 +23,7 @@ export async function getLightsForCard(): Promise<LightForCard[]> {
     room: light.data.room,
     area: light.data.area,
     url: `http://${light.data.host}`,
-    order: light.data.order
+    order: light.data.order,
+    mdns: light.data.mdns
   }))
 }

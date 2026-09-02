@@ -3,7 +3,8 @@
     "name": "Shelf Left",
     "room": "bedroom",
     "area": "desk",
-    "host": "desk-shelf-left.local",
+    "host": "192.168.0.24",
+    "mdns": "desk-shelf-left.local",
     "order": 1
   },
 
@@ -11,7 +12,8 @@
     "name": "Shelf Right",
     "room": "bedroom",
     "area": "desk",
-    "host": "desk-shelf-right.local",
+    "host": "192.168.0.23",
+    "mdns": "desk-shelf-right.local",
     "order": 2
   },
 
@@ -20,7 +22,8 @@
     "name": "Monitor",
     "room": "bedroom",
     "area": "desk",
-    "host": "desk-monitor.local",
+    "host": "192.168.0.21",
+    "mdns": "desk-monitor.local",
     "order": 3
   },
 
@@ -28,7 +31,8 @@
     "name": "Desk Back",
     "room": "bedroom",
     "area": "desk",
-    "host": "desk-back.local",
+    "host": "192.168.0.19",
+    "mdns": "desk-back.local",
     "order": 4
   },
   
@@ -36,7 +40,8 @@
     "name": "Wardrobe Interior",
     "room": "bedroom",
     "area": "wardrobe",
-    "host": "wardrobe-interior.local",
+    "host": "192.168.0.11",
+    "mdns": "wardrobe-interior.local",
     "order": 5
   },
 
@@ -44,7 +49,8 @@
     "name": "Bathroom shelf",
     "room": "bathroom",
     "area": "shelves",
-    "host": "bathroom-shelf.local",
+    "host": "192.168.0.20",
+    "mdns": "bathroom-shelf.local",
     "order": 6
   }
 }

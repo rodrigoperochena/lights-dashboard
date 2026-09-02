@@ -11,6 +11,7 @@ const lights = defineCollection({
     host: z.string().trim().min(1),
     area: z.string().trim().min(1),
     order: z.number().int(),
+    mdns: z.string(),
   })
 })
 
