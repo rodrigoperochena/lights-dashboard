@@ -29,7 +29,7 @@ const brigthnessId = `brightness-${light.id}`
       </div>
       
       <div class="light-info">
-        <span class="light-hostname">{light.host}</span>
+        <span class="light-hostname">{light.id}</span>
         <span
           class="light-connection-status"
           data-status
@@ -320,6 +320,30 @@ const brigthnessId = `brightness-${light.id}`
   import { clearKnownWledState, getKnownWledState, subscribeToWledState, updateKnownWledState } from "@/lib/wled-state";
   
   const lightCards = document.querySelectorAll<HTMLElement>("[data-light-card]")
+  const initialStateAttempts = 2
+  const initialStateRetryDelay = 250
+
+  function delay(ms: number) {
+    return new Promise<void>((resolve) => {
+      setTimeout(resolve, ms)
+    })
+  }
+
+  async function getInitialWledState(host: string) {
+    for (let attempt = 1; attempt <= initialStateAttempts; attempt++) {
+      try {
+        return await getWledState(host)
+      } catch (error) {
+        if (attempt === initialStateAttempts) {
+          throw error
+        }
+
+        await delay(initialStateRetryDelay)
+      }
+    }
+
+    throw new Error(`Failed to connect to ${host}`)
+  }
 
   async function initLightCard(card: HTMLElement) {
     const host = card.dataset.host
@@ -469,7 +493,7 @@ const brigthnessId = `brightness-${light.id}`
     setControlsDisabled(true)
 
     try {
-      const state = await getWledState(host)
+      const state = await getInitialWledState(host)
 
       updateKnownWledState(host, state)
       setControlsDisabled(false)
@@ -477,7 +501,9 @@ const brigthnessId = `brightness-${light.id}`
       try {
         const presets = await getWledPresets(host)
 
-        renderPresets(presets)
+        const visiblePresets = presets.filter(({name}) => !name.startsWith("_internal"))
+
+        renderPresets(visiblePresets)
 
         const currentState = getKnownWledState(host)
 
