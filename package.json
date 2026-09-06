@@ -12,7 +12,8 @@
   "dependencies": {
     "@ulubit/foundations": "^0.1.3",
     "@ulubit/ui": "^0.1.0",
-    "astro": "^7.2.0"
+    "astro": "^7.2.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "sass-embedded": "^1.100.0"
