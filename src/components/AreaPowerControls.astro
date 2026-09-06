@@ -59,14 +59,42 @@ const hosts = lights.map((light) => light.host)
 
     &[data-power="on"] {
       border-radius: var(--border-radius) 0 0 var(--border-radius);
+
+      &[aria-pressed="true"] {
+        color: var(--color-success);
+        text-shadow: 0 0 .5rem var(--color-success);
+      }
+
+      &[aria-pressed="false"] {
+        color: oklch(from var(--color-text-muted) l c h / 50%);
+
+        &:hover {
+          color: var(--color-success);
+          background-color: oklch(from var(--color-bg-light) l c h / 75%);
+        }
+      }
     }
 
     &[data-power="off"] {
       border-radius: 0 var(--border-radius) var(--border-radius) 0;
+
+      &[aria-pressed="true"] {
+        color: var(--color-red-600);
+        text-shadow: 0 0 .5rem var(--color-red-600);
+      }
+
+      &[aria-pressed="false"] {
+        color: oklch(from var(--color-text-muted) l c h / 50%);
+
+        &:hover {
+          color: var(--color-danger);
+          background-color: oklch(from var(--color-bg-light) l c h / 75%);
+        }
+      }
     }
 
     &[aria-pressed="true"] {
-      background-color: var(--color-bg-dark);
+      background-color: oklch(from var(--color-brand) l c h / 11%);
     }
   }
 </style>
