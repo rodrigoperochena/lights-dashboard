@@ -1,19 +1,16 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { siteConfig } from "@/site.config";
-import { ButtonLink } from "@ulubit/ui";
-import GithubIcon from "@/assets/github.svg"
 import LightCard from "@/components/LightCard.astro";
-import { getLightsForCard } from "@/data/lights";
+import { getLights, selectLightsForArea } from "@/data/lights";
 import BedroomIcon from "@/assets/svg/bedroom.svg"
 import BathroomIcon from "@/assets/svg/bath.svg"
-import KitchenIcon from "@/assets/svg/fridge.svg"
+import AreaPowerControls from "@/components/AreaPowerControls.astro";
 
 
-const lights = await getLightsForCard()
+const lights = await getLights()
 const bedroomLights = lights.filter((light) => light.room === "bedroom")
-const deskLights = bedroomLights.filter((room) => room.area === "desk")
-const deskLightsSorted = deskLights.toSorted((a, b) => a.order - b.order)
+const deskLights = selectLightsForArea(lights, "bedroom", "desk")
 const wardrobeLights = bedroomLights.filter((room) => room.area === "wardrobe")
 const bathroomLights = lights.filter((light) => light.room === "bathroom")
 
@@ -24,43 +21,59 @@ const bodyClass = "page-home"
 <BaseLayout {title} {description} {bodyClass}>
   <main id="main-content">
 
-    <section class="lights">
+    <div class="lights">
       <div class="container">
+        <AreaPowerControls lights={lights} />
 
-        <div class="lights-room">
+        <section class:list={["lights-section", "lights-section-room"]}>
           <h2 class="heading"><BedroomIcon />Bedroom</h2>
           
-          <div class="lights-room-container">
-            <div class="lights-area">
-              <h3 class="heading">Desk lights</h3>
+          <div class="lights-section-container">
+            <section class:list={["lights-section", "lights-section-area"]}>
+              <header class="lights-section-header">
+                <h3 class="heading">Desk lights</h3>
+                <AreaPowerControls lights={deskLights} />
+              </header>
+
               <div class="cards">
-                {deskLightsSorted.map((light) => (
+                {deskLights.map((light) => (
                   <LightCard {light} />
                 ))}
               </div>
-            </div>
-            <div class="lights-area">
-              <h3 class="heading">Wardrobe lights</h3>
+            </section>
+
+            <section class:list={["lights-section", "lights-section-area"]}>
+              <header class="lights-section-header">
+                <h3 class="heading">Wardrobe lights</h3>
+                <AreaPowerControls lights={wardrobeLights} />
+              </header>
+
               <div class="cards">
                 {wardrobeLights.map((light) => (
                   <LightCard {light} />
                 ))}
               </div>
-            </div>
+            </section>
           </div>
 
-        </div>
+        </section>
 
-        <div class="lights-room">
-          <h2 class="heading"><BathroomIcon />Bathroom lights</h2>
+        <section class:list={["lights-section", "lights-section-room"]}>
+          <div class="lights-section-header">
+            <h2 class="heading"><BathroomIcon />Bathroom</h2>
+            <AreaPowerControls lights={bathroomLights} />
+          </div>
+
           <div class="cards">
             {bathroomLights.map((light) => (
               <LightCard {light} />
             ))}
           </div>
-        </div>
+        </section>
+
       </div>
-    </section>
+
+    </div>
   </main>
 </BaseLayout>
 
@@ -72,21 +85,19 @@ const bodyClass = "page-home"
     align-items: center;
     padding-top: var(--space-m);
 
-    @media (height <= 42rem) {
-      height: 100%;
-    }
-
-    @media (42rem <= height) {
-      height: 100%;
-    }
-
     .container {
       width: 100%;
     }
   }
 
-  .lights-room {
+  .lights-section-room {
     margin-bottom: var(--space-xl);
+  }
+
+  .lights-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
   }
 
   h2 {
@@ -97,7 +108,7 @@ const bodyClass = "page-home"
     }
   }
 
-  .lights-room-container {
+  .lights-section-container {
     display: grid;
     gap: var(--space-m);
     margin-top: var(--space-xs);

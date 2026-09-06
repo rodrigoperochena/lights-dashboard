@@ -1,11 +1,11 @@
 ---
-import type { LightForCard } from "@/data/lights"
+import type { Light } from "@/data/lights"
 import PowerIcon from "@/assets/svg/power.svg"
 import LinkIcon from "@/assets/svg/external-link.svg"
 import { Button } from "@ulubit/ui"
 
 interface Props {
-  light: LightForCard
+  light: Light
 }
 
 const { light } = Astro.props
@@ -21,10 +21,7 @@ const brigthnessId = `brightness-${light.id}`
   <div class="card-container">
     <header class="card-head">
       <div class="light-info">
-        <div class="light-info-label">
-          <span class="light-power-status"></span>
-          <h3 class="heading">{light.name}</h3>
-        </div>
+        <h3 class:list={["light-name", "heading"]}>{light.name}</h3>
         <span data-power-status>&mdash;</span>
       </div>
       
@@ -100,14 +97,13 @@ const brigthnessId = `brightness-${light.id}`
     box-shadow: var(--inset-s);
   }
 
-  .light-info,
-  .host-info {
+  .light-info {
     display: flex;
     align-items: start;
     justify-content: space-between;
   }
 
-  .light-info-label {
+  .light-info-main {
     display: flex;
     align-items: center;
     gap: var(--space-2xs);
@@ -116,6 +112,19 @@ const brigthnessId = `brightness-${light.id}`
   h3 {
     font-size: var(--step-1);
     font-weight: var(--font-regular);
+    position: relative;
+    padding-left: calc(1rem);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: .5rem;
+      height: .5rem;
+      border-radius: 50%;
+    }
   }
 
   .light-hostname,
@@ -172,6 +181,7 @@ const brigthnessId = `brightness-${light.id}`
     height: .5rem;
     border-radius: 50%;
     display: inline-flex;
+    display: none;
   }
 
   [data-power-status] {
@@ -191,6 +201,11 @@ const brigthnessId = `brightness-${light.id}`
         box-shadow: 0 0 .5rem var(--light-color);
       }
 
+      .light-name::before {
+        background-color: var(--color-success);
+        box-shadow: 0 0 .5rem var(--light-color);
+      }
+
       [data-power-status] {
         color: var(--color-success);
         text-shadow: 0 0 .5rem var(--light-color);
@@ -198,7 +213,7 @@ const brigthnessId = `brightness-${light.id}`
     }
 
     &[data-power-state="off"] {
-      .light-power-status {
+      .light-name::before {
         background-color: var(--color-border);
       }
 

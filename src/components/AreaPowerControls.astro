@@ -1,0 +1,133 @@
+---
+import type { Light } from '@/data/lights'
+
+interface Props {
+  lights: Light[]
+}
+
+const { lights } = Astro.props
+const hosts = lights.map((light) => light.host)
+---
+<div 
+  class="area-power-controls"
+  data-area-power
+  data-hosts={JSON.stringify(hosts)}
+>
+  <div class="area-power-buttons">
+    <button
+      type="button"
+      data-power="on"
+    >
+      ON
+    </button>
+    <button
+      type="button"
+      data-power="off"
+    >
+      OFF
+    </button>
+  </div>
+</div>
+
+<style>
+  .area-power-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 100%;
+      background-color: var(--color-border);
+    }
+  }
+
+  button {
+    background-color: transparent;
+    border: none;
+    padding: var(--space-3xs) var(--space-2xs);
+    cursor: pointer;
+    font-size: var(--step--1);
+    font-family: var(--font-mono);
+
+    &[data-power="on"] {
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
+    }
+
+    &[data-power="off"] {
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    }
+
+    &[aria-pressed="true"] {
+      background-color: var(--color-bg-dark);
+    }
+  }
+</style>
+
+<script>
+  import { setLightsPower } from "@/lib/light-actions"
+  import { getKnownWledState, subscribeToWledState } from "@/lib/wled-state"
+
+  function setControlsDisabled(
+    buttons: NodeListOf<HTMLButtonElement>,
+    disabled: boolean,
+  ) {
+    buttons.forEach((button) => {
+      button.disabled = disabled
+    })
+  }
+
+  function updatePowerState(
+    hosts: string[],
+    buttons: NodeListOf<HTMLButtonElement>,
+  ) {
+    const states = hosts.map((host) => getKnownWledState(host))
+    const isOn = states.some((state) => state?.on === true)
+
+    const allKnown = states.every((state) => state !== undefined)
+
+    const isOff = allKnown && states.every((state) => state.on === false)
+    
+    buttons.forEach((button) => {
+      const active = button.dataset.power === "on" ? isOn : isOff
+
+      button.setAttribute("aria-pressed", String(active))
+    })
+  }
+
+  const powerControls = document.querySelectorAll<HTMLElement>("[data-area-power]")
+
+  powerControls.forEach((controls) => {
+    const hosts = JSON.parse(controls.dataset.hosts ?? "[]") as string[]
+    const buttons = controls.querySelectorAll<HTMLButtonElement>("[data-power]")
+
+    updatePowerState(hosts, buttons)
+
+    subscribeToWledState((host) => {
+      if (!hosts.includes(host)) return
+
+      updatePowerState(hosts, buttons)
+    })
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const on = button.dataset.power === "on"
+
+        setControlsDisabled(buttons, true)
+
+        try {
+          await setLightsPower(hosts, on)
+        } finally {
+          setControlsDisabled(buttons, false)
+        }
+      })
+    })
+  })
+</script>
