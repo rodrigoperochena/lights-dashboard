@@ -1,12 +1,15 @@
 ---
+import { getLights } from "@/data/lights";
+import AreaPowerControls from "./AreaPowerControls.astro";
 import SceneControls from "./SceneControls.astro"
 import SiteBrand from "./SiteBrand.astro"
-import SiteNavigation from "./SiteNavigation.astro"
+
+const lights = await getLights()
 ---
 <header class="site-header" data-site-header>
   <div class="container">
     <SiteBrand />
-    <SceneControls />
+    <AreaPowerControls lights={lights} />
   </div>
 </header>
 

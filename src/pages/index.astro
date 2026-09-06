@@ -6,6 +6,7 @@ import { getLights, selectLightsForArea } from "@/data/lights";
 import BedroomIcon from "@/assets/svg/bedroom.svg"
 import BathroomIcon from "@/assets/svg/bath.svg"
 import AreaPowerControls from "@/components/AreaPowerControls.astro";
+import SceneControls from "@/components/SceneControls.astro";
 
 
 const lights = await getLights()
@@ -21,17 +22,19 @@ const bodyClass = "page-home"
 <BaseLayout {title} {description} {bodyClass}>
   <main id="main-content">
 
+    <div class="lights-scenes">
+      <SceneControls />
+    </div>
+
     <div class="lights">
       <div class="container">
-        <AreaPowerControls lights={lights} />
-
         <section class:list={["lights-section", "lights-section-room"]}>
           <h2 class="heading"><BedroomIcon />Bedroom</h2>
           
           <div class="lights-section-container">
             <section class:list={["lights-section", "lights-section-area"]}>
               <header class="lights-section-header">
-                <h3 class="heading">Desk lights</h3>
+                <h3 class="heading">Desk</h3>
                 <AreaPowerControls lights={deskLights} />
               </header>
 
@@ -44,7 +47,7 @@ const bodyClass = "page-home"
 
             <section class:list={["lights-section", "lights-section-area"]}>
               <header class="lights-section-header">
-                <h3 class="heading">Wardrobe lights</h3>
+                <h3 class="heading">Wardrobe</h3>
                 <AreaPowerControls lights={wardrobeLights} />
               </header>
 
@@ -80,10 +83,22 @@ const bodyClass = "page-home"
 <style lang="scss">
   @use "@ulubit/foundations/breakpoints" as *;
 
+  .lights-scenes {
+    display: flex;
+    justify-content: end;
+    padding-inline: var(--space-xs);
+    padding-top: var(--space-xs);
+    max-width: 100%;
+
+    @include at(lg) {
+      padding-inline: var(--space-l);
+    }
+  }
+
   .lights {
     display: grid;
     align-items: center;
-    padding-top: var(--space-m);
+    padding-top: var(--space-s);
 
     .container {
       width: 100%;
