@@ -3,10 +3,11 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import { siteConfig } from "@/site.config";
 import LightCard from "@/components/LightCard.astro";
 import { getLights, selectLightsForArea } from "@/data/lights";
-import BedroomIcon from "@/assets/svg/bedroom.svg"
-import BathroomIcon from "@/assets/svg/bath.svg"
 import AreaPowerControls from "@/components/AreaPowerControls.astro";
 import SceneControls from "@/components/SceneControls.astro";
+import bedroomImage from "@/assets/bedroom.png"
+import bathroomImage from "@/assets/bathroom.png"
+import { Image } from "astro:assets";
 
 
 const lights = await getLights()
@@ -29,7 +30,12 @@ const bodyClass = "page-home"
     <div class="lights">
       <div class="container">
         <section class:list={["lights-section", "lights-section-room"]}>
-          <h2 class="heading"><BedroomIcon />Bedroom</h2>
+          <header class="lights-section-header">
+            <div class="heading-container">
+              <Image src={bedroomImage} alt={""} width={42} />
+              <h2 class="heading">Bedroom</h2>
+            </div>
+          </header>
           
           <div class="lights-section-container">
             <section class:list={["lights-section", "lights-section-area"]}>
@@ -62,10 +68,13 @@ const bodyClass = "page-home"
         </section>
 
         <section class:list={["lights-section", "lights-section-room"]}>
-          <div class="lights-section-header">
-            <h2 class="heading"><BathroomIcon />Bathroom</h2>
+          <header class="lights-section-header">
+            <div class="heading-container">
+              <Image src={bathroomImage} alt={""} width={42} />
+              <h2 class="heading">Bathroom</h2>
+            </div>
             <AreaPowerControls lights={bathroomLights} />
-          </div>
+          </header>
 
           <div class="cards">
             {bathroomLights.map((light) => (
@@ -115,18 +124,24 @@ const bodyClass = "page-home"
     gap: var(--space-2xs);
   }
 
+  .heading-container {
+    display: flex;
+    align-items: end;
+    gap: var(--space-3xs);
+  }
+
   h2 {
     font-size: var(--step-2);
-    svg {
-      vertical-align: middle;
-      margin-right: var(--space-2xs);
-    }
   }
 
   .lights-section-container {
     display: grid;
     gap: var(--space-m);
     margin-top: var(--space-xs);
+  }
+
+  h3 {
+    font-size: var(--step-1);
   }
 
   .cards {

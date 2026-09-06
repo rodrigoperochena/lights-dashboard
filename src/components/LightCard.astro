@@ -127,6 +127,10 @@ const brigthnessId = `brightness-${light.id}`
     }
   }
 
+  .light-hostname {
+    display: none;
+  }
+
   .light-hostname,
   .light-connection-status {
     font-size: var(--step--1);
@@ -297,6 +301,13 @@ const brigthnessId = `brightness-${light.id}`
     }
   }
 
+  .light-presets {
+    span {
+      font-size: var(--step--1);
+      text-transform: uppercase;
+    }
+  }
+
   .light-preset-list {
     button {
       background-color: transparent;
@@ -308,6 +319,8 @@ const brigthnessId = `brightness-${light.id}`
     display: flex;
     gap: var(--space-2xs);
     flex-wrap: wrap;
+
+    display: none;
 
     & :global([data-preset-id]) {
       background-color: transparent;
