@@ -1,4 +1,3 @@
-// @ts-check
 import { siteConfig } from './src/site.config';
 import { defineConfig, fontProviders } from 'astro/config';
 

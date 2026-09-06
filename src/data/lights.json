@@ -37,7 +37,7 @@
   },
   
   "wardrobe-interior": {
-    "name": "Wardrobe Interior",
+    "name": "Wardrobe",
     "room": "bedroom",
     "area": "wardrobe",
     "host": "192.168.0.11",
